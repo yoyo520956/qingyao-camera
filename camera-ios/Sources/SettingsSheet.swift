@@ -34,7 +34,7 @@ struct SettingsSheet: View {
                                     .labelsHidden()
                                     .onChange(of: vm.video4K) { on in
                                         Haptics.selection()
-                                        engine.setVideoResolution(ultraHD: on)
+                                        vm.engine.setVideoResolution(ultraHD: on)
                                     }
                             }
                             ToggleRow(icon: .sparkles, title: "智能自动", detail: vm.smartAuto ? "低光自动多帧" : "手动") {
