@@ -44,6 +44,7 @@ final class PreviewRenderer: NSObject, MTKViewDelegate {
 
     private let lock = NSLock()
     private var latestBuffer: CVPixelBuffer?
+    private var lutCache: [String: (Data, Int)] = [:]
 
     init(viewModel: CameraViewModel) {
         self.viewModel = viewModel
