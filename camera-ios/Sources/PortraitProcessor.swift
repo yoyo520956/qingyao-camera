@@ -50,7 +50,7 @@ enum PortraitProcessor {
         // 羽化边缘（mask 轻模糊，减少割裂）
         let soft = out.applyingFilter("CIGaussianBlur", parameters: ["inputRadius": 0.8])
         let ctx = CIContext(options: [.useSoftwareRenderer: false])
-        let clamped = soft.clampEdges()
+        let clamped = soft.clampedToExtent
         guard let cgOut = ctx.createCGImage(clamped, from: original.extent) else { return image }
         return UIImage(cgImage: cgOut)
     }
@@ -65,7 +65,8 @@ enum PortraitProcessor {
         } catch {
             return nil
         }
-        guard let obs = request.results?.first, let px = obs.pixelBuffer else { return nil }
+        guard let obs = request.results?.first else { return nil }
+        let px = obs.pixelBuffer
         // 人像=白、背景=黑，直接作为 CIBlendWithMask 的 mask
         var ci2 = CIImage(cvPixelBuffer: px)
         // 提升对比，使分割边界更实
