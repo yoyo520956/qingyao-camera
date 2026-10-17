@@ -118,7 +118,7 @@ enum SRPipeline {
                             let dstBase = cBase + y * inBlock
                             for x in 0..<inBlock {
                                 let sx = min(max(ix + x, 0), exW - 1)
-                                inputArray[dstBase + x] = srcPlane[rowBase + sx]
+                                inputArray[dstBase + x] = NSNumber(value: srcPlane[rowBase + sx])
                             }
                         }
                     }
