@@ -117,6 +117,20 @@ struct ContentView: View {
 
                 VStack {
                     HStack {
+                        if vm.pendingNightFrames > 0 {
+                            HStack(spacing: 5) {
+                                Circle()
+                                    .fill(Theme.cyan)
+                                    .frame(width: 7, height: 7)
+                                Text("夜视 \(NightModeProcessor.frameCount - vm.pendingNightFrames)/\(NightModeProcessor.frameCount)")
+                                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                                    .foregroundColor(.white)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Capsule().fill(Color.black.opacity(0.5)))
+                        }
+
                         if vm.isRecording {
                             Button {
                                 vm.togglePauseRecording()
