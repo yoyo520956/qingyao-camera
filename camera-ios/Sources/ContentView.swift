@@ -98,13 +98,15 @@ struct ContentView: View {
                     CinematicOverlay()
                 }
 
-                ForEach(Array(engine.faceBoxes.enumerated()), id: \.offset) { _, box in
+                ForEach(Array(vm.engine.faceBoxes.enumerated()), id: \.offset) { _, box in
+                    let w = geo.size.width * box.width
+                    let h = geo.size.height * box.height
+                    let cx = geo.size.width * box.midX
+                    let cy = geo.size.height * box.midY
                     RoundedRectangle(cornerRadius: 4)
                         .stroke(Color.yellow.opacity(0.8), lineWidth: 1.2)
-                        .frame(width: geo.size.width * box.width,
-                               height: geo.size.height * box.height)
-                        .position(x: geo.size.width * (box.midX),
-                                  y: geo.size.height * (box.midY))
+                        .frame(width: w, height: h)
+                        .position(x: cx, y: cy)
                 }
 
                 if vm.showEVSlider {
