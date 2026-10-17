@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 enum DS {
 
@@ -37,6 +38,8 @@ extension View {
     }
 }
 
+let isCompactScreen = UIScreen.main.bounds.width < 380
+
 struct GlassIconButton: View {
     let icon: AppIcon
     var active = false
@@ -47,9 +50,9 @@ struct GlassIconButton: View {
 
     var body: some View {
         Button(action: action) {
-            AppIconView(name: icon, size: 17, lineWidth: 1.8,
+            AppIconView(name: icon, size: isCompactScreen ? 14 : 17, lineWidth: 1.8,
                         color: active ? .black : color)
-                .frame(width: 34, height: 34)
+                .frame(width: isCompactScreen ? 29 : 34, height: isCompactScreen ? 29 : 34)
                 .background(
                     Group {
                         if active {
@@ -77,7 +80,7 @@ struct ExposureHUD: View {
     let shutterText: String
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: isCompactScreen ? 6 : 10) {
             HStack(spacing: 4) {
                 Text("ISO")
                     .font(.system(size: 9, weight: .medium, design: .monospaced))
