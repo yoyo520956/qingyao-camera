@@ -277,7 +277,7 @@ final class LUTThumbStore: ObservableObject {
         let h = full.extent.height
         let crop = full.cropped(to: CGRect(x: 0, y: h * 0.32, width: w, height: h * 0.46))
         let small = crop.applyingFilter("CILanczosScaleTransform",
-                                        parameters: [kCIInputScaleKey: 150.0 / w])
+                                        parameters: [kCIInputScaleKey: 110.0 / w])
         baseCI = small
         baseExtent = small.extent
     }
@@ -290,9 +290,9 @@ final class LUTThumbStore: ObservableObject {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
             let ctx = CIContext(options: [.useSoftwareRenderer: false])
-            var cache: [String: (Data, Int)] = [:]
             for lut in luts {
                 autoreleasepool {
+                    var cache: [String: (Data, Int)] = [:]
                     let out = CubeLUTParser.apply(base, lut: lut, cache: &cache, intensity: 1.0)
                     guard let cg = ctx.createCGImage(out, from: extent) else { return }
                     let img = UIImage(cgImage: cg)
