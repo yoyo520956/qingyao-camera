@@ -6,6 +6,9 @@ on:
     paths: ['camera-ios/**', '.github/workflows/build-camera-ios.yml']
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: macos-latest
@@ -46,3 +49,11 @@ jobs:
           name: QingyaoCamera-IPA
           path: camera-ios/QingyaoCamera-unsigned.ipa
           if-no-files-found: error
+      - name: Upload to GitHub Release
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd camera-ios
+          cp QingyaoCamera-unsigned.ipa QingyaoCamera-v4.9-unsigned.ipa
+          gh release create v4.9 QingyaoCamera-v4.9-unsigned.ipa --title "QingyaoCamera v4.9" --notes "倾瑶相机 v4.9 完整未签名 IPA：人像模式虚化 / AI超分 waifu2x / 296胶片LUT / Live Photo / GIF动图 / 4K视频" --clobber || gh release upload v4.9 QingyaoCamera-v4.9-unsigned.ipa --clobber
