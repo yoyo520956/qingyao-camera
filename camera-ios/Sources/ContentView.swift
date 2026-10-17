@@ -39,7 +39,6 @@ struct ContentView: View {
             TopBar(engine: vm.engine)
 
             viewfinder
-                .layoutPriority(1)
 
             FilterStrip()
 
@@ -56,6 +55,7 @@ struct ContentView: View {
             ModeSwitcher()
 
             BottomBar(engine: vm.engine)
+                .layoutPriority(1)
         }
     }
 
