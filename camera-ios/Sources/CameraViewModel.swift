@@ -401,6 +401,7 @@ final class CameraViewModel: ObservableObject {
                 Haptics.capture()
                 self?.capturedPhotos.insert(stitched, at: 0)
                 self?.isProcessing = false
+                self?.engine.restoreAutoExposure()
             }
         }
     }
