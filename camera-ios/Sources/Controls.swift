@@ -6,16 +6,18 @@ struct TopBar: View {
     @ObservedObject var engine: CameraEngine
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: isCompactScreen ? 5 : 10) {
 
             HStack(spacing: 6) {
                 Circle()
                     .fill(engine.isConfigured ? Theme.cyan : Theme.orange)
                     .frame(width: 6, height: 6)
                     .shadow(color: (engine.isConfigured ? Theme.cyan : Theme.orange).opacity(0.8), radius: 3)
-                Text(engine.isConfigured ? "就绪" : "启动中")
-                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.85))
+                if !isCompactScreen {
+                    Text(engine.isConfigured ? "就绪" : "启动中")
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.85))
+                }
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 7)
@@ -46,9 +48,9 @@ struct TopBar: View {
                 Button {
                     vm.toggleTorch()
                 } label: {
-                    AppIconView(name: vm.engine.torchOn ? .zap : .zapOff, size: 16, lineWidth: 2,
+                    AppIconView(name: vm.engine.torchOn ? .zap : .zapOff, size: isCompactScreen ? 13 : 16, lineWidth: 2,
                                 color: vm.engine.torchOn ? .yellow : .white.opacity(0.8))
-                        .frame(width: 34, height: 34)
+                        .frame(width: isCompactScreen ? 29 : 34, height: isCompactScreen ? 29 : 34)
                         .background(Circle().fill(.white.opacity(0.10)))
                         .glassPill()
                 }
@@ -61,9 +63,9 @@ struct TopBar: View {
                 .opacity(engine.isFlashAvailable ? 1 : 0.35)
             GlassIconButton(icon: .settings) { vm.showSettings = true }
         }
-        .padding(.horizontal, 10)
+        .padding(.horizontal, isCompactScreen ? 7 : 10)
         .padding(.top, 6)
-        .padding(.bottom, 8)
+        .padding(.bottom, isCompactScreen ? 6 : 8)
     }
 
     private var flashIcon: AppIcon {
