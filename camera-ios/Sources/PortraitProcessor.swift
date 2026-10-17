@@ -50,7 +50,7 @@ enum PortraitProcessor {
         // 羽化边缘（mask 轻模糊，减少割裂）
         let soft = out.applyingFilter("CIGaussianBlur", parameters: ["inputRadius": 0.8])
         let ctx = CIContext(options: [.useSoftwareRenderer: false])
-        let clamped = soft.clampedToExtent
+        let clamped = soft.clampedToExtent()
         guard let cgOut = ctx.createCGImage(clamped, from: original.extent) else { return image }
         return UIImage(cgImage: cgOut)
     }
