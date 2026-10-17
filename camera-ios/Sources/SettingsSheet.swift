@@ -54,11 +54,11 @@ struct SettingsSheet: View {
                                     .labelsHidden()
                                     .onChange(of: vm.videoSharpen) { _ in Haptics.selection() }
                             }
-                            ToggleRow(icon: .timer, title: "Live Photo", detail: engine.livePhotoCapable ? (vm.livePhotoEnabled ? "开启" : "关闭") : "此设备不支持") {
+                            ToggleRow(icon: .timer, title: "Live Photo", detail: vm.engine.livePhotoCapable ? (vm.livePhotoEnabled ? "开启" : "关闭") : "此设备不支持") {
                                 Toggle("", isOn: $vm.livePhotoEnabled)
                                     .toggleStyle(SwitchToggleStyle(tint: Theme.cyan))
                                     .labelsHidden()
-                                    .disabled(!engine.livePhotoCapable)
+                                    .disabled(!vm.engine.livePhotoCapable)
                             }
                             Text("画面全开：取景器铺满屏幕（轻微裁切）；智能自动参考系统相机策略，暗光自动叠加多帧合成；Live Photo 与系统相机同款（长按压播放）")
                                 .font(.system(size: 11))
