@@ -465,10 +465,11 @@ final class CameraEngine: NSObject, ObservableObject {
     func setFrontMirror(_ on: Bool) {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
-            [self.photoOutput, self.videoOutput].compactMap { $0.connection(with: .video) }.forEach { conn in
-                if conn.isVideoMirroringSupported {
-                    conn.isVideoMirrored = on && conn.inputPort.sourceDevicePosition == .front
-                }
+            var conns: [AVCaptureConnection] = []
+            if let c = self.photoOutput.connection(with: .video) { conns.append(c) }
+            if let c = self.videoOutput.connection(with: .video) { conns.append(c) }
+            for conn in conns where conn.isVideoMirroringSupported {
+                conn.isVideoMirrored = on && conn.inputPorts.first?.sourceDevicePosition == .front
             }
         }
     }
@@ -494,18 +495,6 @@ final class CameraEngine: NSObject, ObservableObject {
                 if d.isFocusModeSupported(.continuousAutoFocus) {
                     d.focusMode = .continuousAutoFocus
                 }
-                d.unlockForConfiguration()
-            } catch {}
-        }
-    }
-
-    func setExposureBias(_ bias: Float) {
-        sessionQueue.async { [weak self] in
-            guard let self = self, let d = self.currentDevice else { return }
-            let clamped = max(d.minExposureTargetBias, min(d.maxExposureTargetBias, bias))
-            do {
-                try d.lockForConfiguration()
-                d.setExposureTargetBias(clamped, completionHandler: nil)
                 d.unlockForConfiguration()
             } catch {}
         }
@@ -763,7 +752,7 @@ extension CameraEngine: AVCapturePhotoCaptureDelegate {
 
         guard let data = photo.fileDataRepresentation(),
               let image = UIImage(data: data) else { return }
-        let liveURL = photo.livePhotoMovieFileURL ?? self.pendingLivePhotoMovieURL
+        let liveURL = self.pendingLivePhotoMovieURL
         self.pendingLivePhotoMovieURL = nil
         DispatchQueue.main.async { [weak self] in
             self?.onPhotoCaptured?(image)
