@@ -13,6 +13,8 @@ targets:
     sources:
       - path: Sources
       - path: Assets.xcassets
+      - path: Resources/PreviewPhoto.jpg
+        buildPhase: resources
       - path: Resources/LUTs
         buildPhase: resources
       - path: Resources/Models
