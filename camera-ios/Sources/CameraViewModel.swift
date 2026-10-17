@@ -76,7 +76,7 @@ final class CameraViewModel: ObservableObject {
     @Published var isRecordingPaused = false
     @Published var recordingSeconds = 0
     private var recordTimer: Timer?
-    private var pendingNightFrames = 0
+    @Published var pendingNightFrames = 0
 
     @Published var captureStyle: CaptureStyle = .normal
     @Published var rawEnabled = false
@@ -375,6 +375,32 @@ final class CameraViewModel: ObservableObject {
         for i in 0..<NightModeProcessor.frameCount {
             DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.4) { [weak self] in
                 self?.performCapture(night: true)
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + Double(NightModeProcessor.frameCount) * 0.4 + 4.0) { [weak self] in
+            guard let self = self, self.pendingNightFrames > 0 else { return }
+            self.pendingNightFrames = 0
+            self.finalizeNightFrames()
+        }
+    }
+
+    private func finalizeNightFrames() {
+        isProcessing = true
+        let frames = engine.nightFrames
+        engine.resetNightFrames()
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let stitched = NightModeProcessor.stitch(frames) else {
+                DispatchQueue.main.async { self?.isProcessing = false }
+                return
+            }
+            if let jpeg = stitched.jpegData(compressionQuality: 0.95) {
+                self?.savePhoto(jpeg)
+            }
+            DispatchQueue.main.async {
+                self?.lastPhoto = stitched
+                Haptics.capture()
+                self?.capturedPhotos.insert(stitched, at: 0)
+                self?.isProcessing = false
             }
         }
     }
@@ -775,28 +801,11 @@ final class CameraViewModel: ObservableObject {
             return
         }
 
-        if mode == .night {
+        if pendingNightFrames > 0 {
             engine.addNightFrame(image)
             pendingNightFrames -= 1
             if pendingNightFrames <= 0 {
-                isProcessing = true
-                let frames = engine.nightFrames
-                engine.resetNightFrames()
-                DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-                    guard let stitched = NightModeProcessor.stitch(frames) else {
-                        DispatchQueue.main.async { self?.isProcessing = false }
-                        return
-                    }
-                    if let jpeg = stitched.jpegData(compressionQuality: 0.95) {
-                        self?.savePhoto(jpeg)
-                    }
-                    DispatchQueue.main.async {
-                        self?.lastPhoto = stitched
-                        Haptics.capture()
-                        self?.capturedPhotos.insert(stitched, at: 0)
-                        self?.isProcessing = false
-                    }
-                }
+                finalizeNightFrames()
             }
             return
         }
