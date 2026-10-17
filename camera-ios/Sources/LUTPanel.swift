@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreImage
 
 struct CinematicOverlay: View {
     var body: some View {
@@ -69,6 +70,7 @@ struct LUTIntensitySlider: View {
 
 struct LUTPanel: View {
     @EnvironmentObject var vm: CameraViewModel
+    @ObservedObject private var thumbStore = LUTThumbStore.shared
     @Environment(\.dismiss) var dismiss
     @State private var category = "negative_color"
     @State private var search = ""
@@ -176,14 +178,25 @@ struct LUTPanel: View {
                             } label: {
                                 VStack(spacing: 6) {
 
-                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [previewColorA(lut), previewColorB(lut)],
-                                                startPoint: .topLeading, endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .frame(height: 54)
+                                    ZStack {
+                                        if let thumb = thumbStore.thumbs[lut.file] {
+                                            Image(uiImage: thumb)
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(height: 54)
+                                                .frame(maxWidth: .infinity)
+                                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                        } else {
+                                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                                .fill(
+                                                    LinearGradient(
+                                                        colors: [previewColorA(lut), previewColorB(lut)],
+                                                        startPoint: .topLeading, endPoint: .bottomTrailing
+                                                    )
+                                                )
+                                                .frame(height: 54)
+                                        }
+                                    }
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 10)
                                                 .stroke(selected ? Theme.cyan : Color.clear, lineWidth: 2)
@@ -207,7 +220,10 @@ struct LUTPanel: View {
                     .padding(.bottom, 30)
                     .opacity(appeared ? 1 : 0)
                     .offset(y: appeared ? 0 : 26)
-                    .onAppear { withAnimation(DS.springSoft.delay(0.06)) { appeared = true } }
+                    .onAppear {
+                        withAnimation(DS.springSoft.delay(0.06)) { appeared = true }
+                        thumbStore.ensureAll(allLUTs)
+                    }
                 }
             }
         }
@@ -240,6 +256,49 @@ struct LUTPanel: View {
         case "negative_old": return Color(red: 0.30, green: 0.22, blue: 0.18)
         case "print": return Color(red: 0.45, green: 0.42, blue: 0.38)
         default: return Color(white: 0.3)
+        }
+    }
+}
+
+
+final class LUTThumbStore: ObservableObject {
+    static let shared = LUTThumbStore()
+    @Published var thumbs: [String: UIImage] = [:]
+    private var started = false
+    private var baseCI: CIImage?
+    private var baseExtent: CGRect = .zero
+
+    private init() {
+        guard let url = Bundle.main.url(forResource: "PreviewPhoto", withExtension: "jpg"),
+              let data = try? Data(contentsOf: url),
+              let ui = UIImage(data: data),
+              let full = CIImage(image: ui) else { return }
+        let w = full.extent.width
+        let h = full.extent.height
+        let crop = full.cropped(to: CGRect(x: 0, y: h * 0.32, width: w, height: h * 0.46))
+        let small = crop.applyingFilter("CILanczosScaleTransform",
+                                        parameters: [kCIInputScaleKey: 150.0 / w])
+        baseCI = small
+        baseExtent = small.extent
+    }
+
+    func ensureAll(_ luts: [CubeLUT]) {
+        guard !started, baseCI != nil else { return }
+        started = true
+        let base = baseCI!
+        let extent = baseExtent
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            let ctx = CIContext(options: [.useSoftwareRenderer: false])
+            var cache: [String: (Data, Int)] = [:]
+            for lut in luts {
+                autoreleasepool {
+                    let out = CubeLUTParser.apply(base, lut: lut, cache: &cache, intensity: 1.0)
+                    guard let cg = ctx.createCGImage(out, from: extent) else { return }
+                    let img = UIImage(cgImage: cg)
+                    DispatchQueue.main.async { self.thumbs[lut.file] = img }
+                }
+            }
         }
     }
 }
