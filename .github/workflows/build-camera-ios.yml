@@ -1,0 +1,48 @@
+name: Build Camera iOS IPA
+
+on:
+  push:
+    branches: [main]
+    paths: ['camera-ios/**', '.github/workflows/build-camera-ios.yml']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: camera-ios
+        run: xcodegen generate
+
+      - name: Build (unsigned)
+        working-directory: camera-ios
+        run: |
+          set -o pipefail
+          xcodebuild -project QingyaoCamera.xcodeproj -scheme QingyaoCamera \
+            -sdk iphoneos -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package IPA (unsigned)
+        working-directory: camera-ios
+        run: |
+          ls build/Build/Products/Release-iphoneos/
+          mkdir -p Payload
+          cp -r build/Build/Products/Release-iphoneos/QingyaoCamera.app Payload/
+          zip -qry QingyaoCamera-unsigned.ipa Payload
+          ls -la QingyaoCamera-unsigned.ipa
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: QingyaoCamera-IPA
+          path: camera-ios/QingyaoCamera-unsigned.ipa
+          if-no-files-found: error

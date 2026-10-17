@@ -1,0 +1,53 @@
+name: QingyaoCamera
+options:
+  bundleIdPrefix: com.youlong
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+  minimumXcodeGenVersion: "2.30.0"
+
+targets:
+  QingyaoCamera:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: Assets.xcassets
+      - path: Resources/LUTs
+        buildPhase: resources
+      - path: Resources/Models
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.youlong.qingyaocamera
+        PRODUCT_NAME: QingyaoCamera
+        INFOPLIST_FILE: Info.plist
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "5.0"
+        IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+        CODE_SIGNING_ALLOWED: "NO"
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGN_IDENTITY: ""
+        GENERATE_INFOPLIST_FILE: "NO"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: 倾瑶相机
+        CFBundleName: QingyaoCamera
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIRequiresFullScreen: true
+        UIStatusBarStyle: UIStatusBarStyleLightContent
+        UIViewControllerBasedStatusBarAppearance: true
+        NSCameraUsageDescription: 倾瑶相机需要使用摄像头来拍摄照片
+        NSMicrophoneUsageDescription: 倾瑶相机录制视频时需要使用麦克风收录声音
+        NSPhotoLibraryAddUsageDescription: 倾瑶相机需要将拍摄的照片保存到你的相册
+        NSSpeechRecognitionUsageDescription: 倾瑶相机的语音控制功能需要识别你的口令（拍照/录制/停止）
+        NSMotionUsageDescription: 倾瑶相机的水平仪功能需要读取运动传感器数据
+        ITSAppUsesNonExemptEncryption: false
+    scheme:
+      testTargets: []
