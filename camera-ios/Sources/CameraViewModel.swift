@@ -808,8 +808,8 @@ final class CameraViewModel: ObservableObject {
 
             if self?.detailEnhanceEnabled == true {
                 processed = DetailEnhancer.enhance(processed)
-                if self?.aiSuperResolution == true, engine.liveISO > 300 {
-                    if let sr = SRPipeline.denoise(processed, iso: engine.liveISO) {
+                if self?.aiSuperResolution == true, let eng = self?.engine, eng.liveISO > 300 {
+                    if let sr = SRPipeline.denoise(processed, iso: eng.liveISO) {
                         processed = sr
                     }
                 }
@@ -848,16 +848,16 @@ final class CameraViewModel: ObservableObject {
     }
 
     private func savePhoto(_ jpeg: Data) {
-        PHPhotoLibrary.shared().performChanges({
+        PHPhotoLibrary.shared().performChanges({ [weak self] in
             let request = PHAssetCreationRequest.forAsset()
 
-            if let movieURL = pendingLiveMovie,
+            if let movieURL = self?.pendingLiveMovie,
                FileManager.default.fileExists(atPath: movieURL.path) {
                 let options = PHAssetResourceCreationOptions()
                 options.shouldMoveFile = true
                 request.addResource(with: .photo, data: jpeg, options: nil)
                 request.addResource(with: .pairedVideo, fileURL: movieURL, options: options)
-                pendingLiveMovie = nil
+                self?.pendingLiveMovie = nil
             } else {
                 request.addResource(with: .photo, data: jpeg, options: nil)
             }
