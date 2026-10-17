@@ -1,7 +1,7 @@
 import Foundation
 import CoreML
 
-struct Waifu2xInput: MLFeatureProvider {
+class Waifu2xInput: NSObject, MLFeatureProvider {
     var input: MLMultiArray
 
     var featureNames: Set<String> {
@@ -17,6 +17,7 @@ struct Waifu2xInput: MLFeatureProvider {
 
     init(_ input: MLMultiArray) {
         self.input = input
+        super.init()
     }
 }
 
