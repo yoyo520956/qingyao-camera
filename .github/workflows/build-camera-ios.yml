@@ -55,5 +55,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cd camera-ios
-          cp QingyaoCamera-unsigned.ipa QingyaoCamera-v4.9.2-unsigned.ipa
-          gh release create v4.9.2 QingyaoCamera-v4.9.2-unsigned.ipa --title "QingyaoCamera v4.9.2" --notes "倾瑶相机 v4.9.2：修复 SE3 小屏按钮溢出 / 修复开屏自动拍照（音量键误触发）" || gh release upload v4.9.2 QingyaoCamera-v4.9.2-unsigned.ipa --clobber
+          cp QingyaoCamera-unsigned.ipa QingyaoCamera-v4.9.3-unsigned.ipa
+          gh release create v4.9.3 QingyaoCamera-v4.9.3-unsigned.ipa --title "QingyaoCamera v4.9.3" --notes "倾瑶相机 v4.9.3：修复 SE3 小屏按钮溢出 / 修复开屏自动拍照（音量键误触发）" || gh release upload v4.9.3 QingyaoCamera-v4.9.3-unsigned.ipa --clobber
