@@ -142,6 +142,9 @@ final class CameraEngine: NSObject, ObservableObject {
         if livePhotoCapable {
             photoOutput.isLivePhotoCaptureEnabled = true
         }
+        if photoOutput.maxPhotoQualityPrioritization != .quality {
+            photoOutput.maxPhotoQualityPrioritization = .quality
+        }
 
         guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
               let input = try? AVCaptureDeviceInput(device: device) else {
@@ -329,6 +332,12 @@ final class CameraEngine: NSObject, ObservableObject {
         }
     }
 
+    private func clampedQuality(_ want: AVCapturePhotoOutput.QualityPrioritization) -> AVCapturePhotoOutput.QualityPrioritization {
+        AVCapturePhotoOutput.QualityPrioritization(
+            rawValue: min(want.rawValue, photoOutput.maxPhotoQualityPrioritization.rawValue)
+        ) ?? .balanced
+    }
+
     func capturePhoto(nightMode: Bool = false, raw: Bool = false) {
         sessionQueue.async { [weak self] in
             guard let self = self, let d = self.currentDevice else { return }
@@ -339,7 +348,7 @@ final class CameraEngine: NSObject, ObservableObject {
                 if let rawType = rawTypes.first {
                     let settings = AVCapturePhotoSettings(rawPixelFormatType: rawType)
                     if #available(iOS 13.0, *) {
-                        settings.photoQualityPrioritization = .quality
+                        settings.photoQualityPrioritization = self.clampedQuality(.quality)
                     }
                     self.photoOutput.capturePhoto(with: settings, delegate: self)
                     return
@@ -348,7 +357,7 @@ final class CameraEngine: NSObject, ObservableObject {
 
             let settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])
             if #available(iOS 13.0, *) {
-                settings.photoQualityPrioritization = nightMode ? .quality : .balanced
+                settings.photoQualityPrioritization = self.clampedQuality(nightMode ? .quality : .balanced)
             }
 
             if livePhotoCapable, photoOutput.isLivePhotoCaptureEnabled, livePhotoEnabled {
