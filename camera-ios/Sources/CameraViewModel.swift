@@ -148,6 +148,9 @@ final class CameraViewModel: ObservableObject {
     private var slowShutterFrames: [UIImage] = []
     private var slowShutterEnd: Date?
     private var volumeKVO: NSKeyValueObservation?
+    private var lastVolume: Float = 0
+    private var lastShutterTime = Date.distantPast
+    private var volumeKVOStartedAt = Date()
     private var panoTickTimer: Timer?
 
     @Published var photoRatio: PhotoRatio = .r4x3
@@ -205,11 +208,22 @@ final class CameraViewModel: ObservableObject {
 
         try? AVAudioSession.sharedInstance().setCategory(.playAndRecord, options: [.mixWithOthers, .allowBluetooth])
         try? AVAudioSession.sharedInstance().setActive(true)
+        lastVolume = AVAudioSession.sharedInstance().outputVolume
+        volumeKVOStartedAt = Date()
         volumeKVO = AVAudioSession.sharedInstance().observe(\.outputVolume, options: [.new]) { [weak self] _, change in
             guard let self = self, self.volumeShutterEnabled,
-                  let new = change.newValue, new > 0.06 else { return }
+                  let new = change.newValue else { return }
             DispatchQueue.main.async {
+                guard Date().timeIntervalSince(self.volumeKVOStartedAt) > 1.5 else {
+                    self.lastVolume = new
+                    return
+                }
+                let prev = self.lastVolume
+                self.lastVolume = new
+                guard new - prev > 0.03, new > 0.06 else { return }
+                guard Date().timeIntervalSince(self.lastShutterTime) > 0.5 else { return }
                 guard self.countdown == nil, !self.isProcessing else { return }
+                self.lastShutterTime = Date()
                 self.capture()
             }
         }
