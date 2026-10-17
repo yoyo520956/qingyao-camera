@@ -233,6 +233,7 @@ struct ContentView: View {
             )
         }
         .aspectRatio(vm.photoRatio.viewfinderAspect, contentMode: vm.fullScreenViewfinder ? .fill : .fit)
+        .frame(maxHeight: UIScreen.main.bounds.height - 330)
         .clipped()
         .background(Color.black)
         .overlay(
