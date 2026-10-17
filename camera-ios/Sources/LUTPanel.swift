@@ -107,7 +107,7 @@ struct LUTPanel: View {
                                 .foregroundColor(Theme.cyan)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
-                                .background(Capsule().fill(Theme.tintSoft))
+                                .background(Capsule().fill(DS.tintSoft))
                         }
                         .buttonStyle(.plain)
                     }
