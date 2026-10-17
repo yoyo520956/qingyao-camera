@@ -79,15 +79,14 @@ enum SRPipeline {
         }
 
         for c in 0..<3 {
-            let pl = &planes[c]
             for y in 0..<exH {
                 let srcX = min(max(shrink, 0), W - 1) + shrink
-                for x in 0..<shrink { pl[y * exW + x] = pl[y * exW + srcX] }
-                for x in (shrink + W)..<exW { pl[y * exW + x] = pl[y * exW + shrink + W - 1] }
+                for x in 0..<shrink { planes[c][y * exW + x] = planes[c][y * exW + srcX] }
+                for x in (shrink + W)..<exW { planes[c][y * exW + x] = planes[c][y * exW + shrink + W - 1] }
             }
             for x in 0..<exW {
-                for y in 0..<shrink { pl[y * exW + x] = pl[shrink * exW + x] }
-                for y in (shrink + H)..<exH { pl[y * exW + x] = pl[(shrink + H - 1) * exW + x] }
+                for y in 0..<shrink { planes[c][y * exW + x] = planes[c][shrink * exW + x] }
+                for y in (shrink + H)..<exH { planes[c][y * exW + x] = planes[c][(shrink + H - 1) * exW + x] }
             }
         }
 
@@ -104,7 +103,7 @@ enum SRPipeline {
                     let ox = col * strideOut, oy = row * strideOut
 
                     let ix = ox / scale, iy = oy / scale
-                    let shape = [1, 3, NSNumber(value: inBlock), NSNumber(value: inBlock)] as [NSNumber]
+                    let shape: [NSNumber] = [1, 3, NSNumber(value: inBlock), NSNumber(value: inBlock)]
                     guard let inputArray = try? MLMultiArray(shape: shape, dataType: .float32) else { return }
 
                     for c in 0..<3 {
