@@ -54,6 +54,18 @@ final class TimeLapseRecorder: ObservableObject {
         cleanup()
     }
 
+    private static func loadFrames(dir: URL, count: Int, step: Int) -> [UIImage] {
+        var frames: [UIImage] = []
+        guard step >= 1 else { return frames }
+        for i in stride(from: 0, to: count, by: step) {
+            let url = dir.appendingPathComponent(String(format: "f_%05d.jpg", i))
+            if let data = try? Data(contentsOf: url), let img = UIImage(data: data) {
+                frames.append(img)
+            }
+        }
+        return frames
+    }
+
     func stopAndRender(withGif: Bool = true, completion: @escaping (Bool) -> Void) {
         isRunning = false
         let dir = tempDir
