@@ -332,6 +332,21 @@ final class CameraEngine: NSObject, ObservableObject {
         }
     }
 
+    private var nightExposureActive = false
+
+    func restoreAutoExposure() {
+        sessionQueue.async { [weak self] in
+            guard let self = self, self.nightExposureActive,
+                  let d = self.currentDevice, d.exposureMode == .custom else { return }
+            do {
+                try d.lockForConfiguration()
+                d.exposureMode = .continuousAutoExposure
+                d.unlockForConfiguration()
+                self.nightExposureActive = false
+            } catch {}
+        }
+    }
+
     private func clampedQuality(_ want: AVCapturePhotoOutput.QualityPrioritization) -> AVCapturePhotoOutput.QualityPrioritization {
         AVCapturePhotoOutput.QualityPrioritization(
             rawValue: min(want.rawValue, photoOutput.maxPhotoQualityPrioritization.rawValue)
@@ -342,6 +357,7 @@ final class CameraEngine: NSObject, ObservableObject {
         sessionQueue.async { [weak self] in
             guard let self = self, let d = self.currentDevice else { return }
             guard self.session.isRunning else { return }
+            if !nightMode { restoreAutoExposure() }
 
             if raw {
                 let rawTypes = self.photoOutput.availableRawPhotoPixelFormatTypes
@@ -375,10 +391,11 @@ final class CameraEngine: NSObject, ObservableObject {
                 do {
                     try d.lockForConfiguration()
                     if d.exposureMode != .custom { d.exposureMode = .continuousAutoExposure }
-                    let duration = CMTime(value: 1, timescale: 12)
-                    let iso = min(d.activeFormat.maxISO, max(d.iso, d.activeFormat.maxISO * 0.75))
+                    let duration = CMTime(value: 1, timescale: 25)
+                    let iso = min(d.activeFormat.maxISO, max(d.iso, d.activeFormat.maxISO * 0.45))
                     d.setExposureModeCustom(duration: duration, iso: iso, completionHandler: nil)
                     d.unlockForConfiguration()
+                    nightExposureActive = true
                 } catch {}
                 settings.flashMode = .off
             } else if d.hasFlash && d.position == .back {
