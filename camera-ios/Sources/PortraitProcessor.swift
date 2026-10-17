@@ -73,16 +73,18 @@ enum PortraitProcessor {
         return ci2
     }
 
-    private extension CIImage {
-        func scaleToMatch(_ target: CGRect) -> CIImage {
-            guard abs(extent.width - target.width) > 1 || abs(extent.height - target.height) > 1 else {
-                return self.cropped(to: target)
-            }
-            let sx = target.width / extent.width
-            let sy = target.height / extent.height
-            var t = self.transformed(by: CGAffineTransform(scaleX: sx, y: sy))
-            t = t.cropped(to: target)
-            return t
+}
+
+// MARK: - mask 尺寸对齐（文件级 extension）
+private extension CIImage {
+    func scaleToMatch(_ target: CGRect) -> CIImage {
+        guard abs(extent.width - target.width) > 1 || abs(extent.height - target.height) > 1 else {
+            return self.cropped(to: target)
         }
+        let sx = target.width / extent.width
+        let sy = target.height / extent.height
+        var t = self.transformed(by: CGAffineTransform(scaleX: sx, y: sy))
+        t = t.cropped(to: target)
+        return t
     }
 }
