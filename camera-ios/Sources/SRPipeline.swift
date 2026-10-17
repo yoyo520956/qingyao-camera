@@ -104,14 +104,21 @@ enum SRPipeline {
 
                     let ix = ox / scale, iy = oy / scale
                     let shape: [NSNumber] = [1, 3, NSNumber(value: inBlock), NSNumber(value: inBlock)]
-                    guard let inputArray = try? MLMultiArray(shape: shape, dataType: .float32) else { return }
+                    let inputArray: MLMultiArray
+                    do {
+                        inputArray = try MLMultiArray(shape: shape, dataType: .float32)
+                    } catch { return }
 
                     for c in 0..<3 {
+                        let cBase = c * inBlock * inBlock
+                        let srcPlane = planes[c]
                         for y in 0..<inBlock {
                             let sy = min(max(iy + y, 0), exH - 1)
+                            let rowBase = sy * exW
+                            let dstBase = cBase + y * inBlock
                             for x in 0..<inBlock {
                                 let sx = min(max(ix + x, 0), exW - 1)
-                                inputArray[c * inBlock * inBlock + y * inBlock + x] = planes[c][sy * exW + sx]
+                                inputArray[dstBase + x] = srcPlane[rowBase + sx]
                             }
                         }
                     }
@@ -120,14 +127,17 @@ enum SRPipeline {
                     let outCount = output.count / 3
                     let obw = Int(Double(outBlock))
                     for c in 0..<3 {
+                        let cBase = c * outCount
                         for y in 0..<outBlock {
                             let dy = oy + y - cropOut
                             if dy < 0 || dy >= outH { continue }
+                            let rowBase = y * obw
+                            let dstRow = dy * outW
                             for x in 0..<outBlock {
                                 let dx = ox + x - cropOut
                                 if dx < 0 || dx >= outW { continue }
-                                let v = output[c * outCount + y * obw + x].floatValue
-                                outPlanes[c][dy * outW + dx] = max(0, min(1, v))
+                                let v = output[cBase + rowBase + x].floatValue
+                                outPlanes[c][dstRow + dx] = max(0, min(1, v))
                             }
                         }
                     }
