@@ -81,6 +81,14 @@ final class PreviewRenderer: NSObject, MTKViewDelegate {
         image = image.oriented(isFront ? .leftMirrored : .right)
 
         if let vm = viewModel {
+            if vm.mode == .night {
+                image = image
+                    .applyingFilter("CIExposureAdjust", parameters: [kCIInputEVKey: 1.6])
+                    .applyingFilter("CIColorControls", parameters: [
+                        kCIInputBrightnessKey: 0.10,
+                        kCIInputContrastKey: 1.04
+                    ])
+            }
             if vm.beautyEnabled {
                 image = BeautyProcessor.apply(image, level: vm.beautyLevel)
             }
