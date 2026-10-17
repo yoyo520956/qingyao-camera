@@ -56,4 +56,4 @@ jobs:
         run: |
           cd camera-ios
           cp QingyaoCamera-unsigned.ipa QingyaoCamera-v4.9-unsigned.ipa
-          gh release create v4.9 QingyaoCamera-v4.9-unsigned.ipa --title "QingyaoCamera v4.9" --notes "倾瑶相机 v4.9 完整未签名 IPA：人像模式虚化 / AI超分 waifu2x / 296胶片LUT / Live Photo / GIF动图 / 4K视频" --clobber || gh release upload v4.9 QingyaoCamera-v4.9-unsigned.ipa --clobber
+          gh release create v4.9 QingyaoCamera-v4.9-unsigned.ipa --title "QingyaoCamera v4.9" --notes "倾瑶相机 v4.9 完整未签名 IPA：人像模式虚化 / AI超分 waifu2x / 296胶片LUT / Live Photo / GIF动图 / 4K视频" || gh release upload v4.9 QingyaoCamera-v4.9-unsigned.ipa --clobber
