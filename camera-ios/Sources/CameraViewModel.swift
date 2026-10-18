@@ -71,14 +71,24 @@ final class CameraViewModel: ObservableObject {
     @Published var focusIndicator: CGPoint?
     @Published var flashHighlight = false
 
-    @Published var mode: CaptureMode = .photo
+    @Published var mode: CaptureMode = .photo {
+        didSet {
+            guard mode != oldValue else { return }
+            abortMultiFrame()
+        }
+    }
     @Published var isRecording = false
     @Published var isRecordingPaused = false
     @Published var recordingSeconds = 0
     private var recordTimer: Timer?
     @Published var pendingNightFrames = 0
 
-    @Published var captureStyle: CaptureStyle = .normal
+    @Published var captureStyle: CaptureStyle = .normal {
+        didSet {
+            guard captureStyle != oldValue else { return }
+            abortMultiFrame()
+        }
+    }
     @Published var rawEnabled = false
     @Published var whiteBalanceK: Double = 5600
     private var hdrFrames: [UIImage] = []
@@ -288,12 +298,27 @@ final class CameraViewModel: ObservableObject {
         }
     }
 
-    private func performCapture(night: Bool, raw: Bool = false) {
-        flashHighlight = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-            self?.flashHighlight = false
+    private func abortMultiFrame() {
+        hdrStep = -1
+        hdrFrames.removeAll()
+        hdrPlusFrames.removeAll()
+        hdrPlusRemaining = 0
+        ultraFrames.removeAll()
+        ultraRemaining = 0
+        pendingNightFrames = 0
+        engine.resetNightFrames()
+        engine.setExposureBias(0)
+        engine.restoreAutoExposure()
+    }
+
+    private func performCapture(night: Bool, raw: Bool = false, live: Bool = true) {
+        if live {
+            flashHighlight = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                self?.flashHighlight = false
+            }
         }
-        engine.capturePhoto(nightMode: night, raw: raw)
+        engine.capturePhoto(nightMode: night, raw: raw, allowLivePhoto: live)
     }
 
     private func startHDRCapture() {
@@ -372,10 +397,8 @@ final class CameraViewModel: ObservableObject {
         isProcessing = true
         engine.resetNightFrames()
         pendingNightFrames = NightModeProcessor.frameCount
-        for i in 0..<NightModeProcessor.frameCount {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.4) { [weak self] in
-                self?.performCapture(night: true)
-            }
+        for _ in 0..<NightModeProcessor.frameCount {
+            performCapture(night: true, live: false)
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + Double(NightModeProcessor.frameCount) * 0.4 + 4.0) { [weak self] in
             guard let self = self, self.pendingNightFrames > 0 else { return }
@@ -439,14 +462,14 @@ final class CameraViewModel: ObservableObject {
     private func startHDRPlus() {
         hdrPlusFrames = []
         hdrPlusRemaining = 8
-        engine.capturePhoto(nightMode: false)
+        for _ in 0..<8 { performCapture(night: false, live: false) }
     }
 
     private func startUltraCapture() {
         ultraFrames = []
         ultraRemaining = 4
         DetailEnhancer.currentISOHint = engine.liveISO
-        engine.capturePhoto(nightMode: false)
+        for _ in 0..<4 { performCapture(night: false, live: false) }
     }
 
     private func startSlowShutter() {
@@ -701,11 +724,7 @@ final class CameraViewModel: ObservableObject {
         if hdrPlusRemaining > 0 {
             hdrPlusFrames.append(image)
             hdrPlusRemaining -= 1
-            if hdrPlusRemaining > 0 {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { [weak self] in
-                    self?.engine.capturePhoto(nightMode: false)
-                }
-            } else {
+            if hdrPlusRemaining == 0 {
                 let frames = hdrPlusFrames
                 hdrPlusFrames = []
                 isProcessing = true
@@ -729,11 +748,7 @@ final class CameraViewModel: ObservableObject {
         if ultraRemaining > 0 {
             ultraFrames.append(image)
             ultraRemaining -= 1
-            if ultraRemaining > 0 {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
-                    self?.engine.capturePhoto(nightMode: false)
-                }
-            } else {
+            if ultraRemaining == 0 {
                 let frames = ultraFrames
                 ultraFrames = []
                 isProcessing = true
@@ -767,12 +782,12 @@ final class CameraViewModel: ObservableObject {
             hdrStep += 1
             if hdrStep == 1 {
                 engine.setExposureBias(0)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
                     self?.performCapture(night: false)
                 }
             } else if hdrStep == 2 {
                 engine.setExposureBias(1.5)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
                     self?.performCapture(night: false)
                 }
             } else {
