@@ -38,7 +38,7 @@ enum HDRProcessor {
 
         var ci = CIImage(cgImage: img)
         ci = autoLevels(ci)
-        ci = adjust(ci, contrast: 1.04, saturation: 1.08, gamma: 0.96)
+        ci = adjust(ci, contrast: 1.04, saturation: 1.08, gamma: 1.0)
         let ctx = CIContext(options: [.useSoftwareRenderer: false])
         guard let final = ctx.createCGImage(ci, from: ci.extent) else { return nil }
         return UIImage(cgImage: final)
@@ -48,7 +48,7 @@ enum HDRProcessor {
         guard let cg = input.cgImage else { return input }
         var ci = CIImage(cgImage: cg)
         ci = autoLevels(ci)
-        ci = adjust(ci, contrast: 1.04, saturation: 1.08, gamma: 0.96)
+        ci = adjust(ci, contrast: 1.04, saturation: 1.08, gamma: 1.0)
         let ctx = CIContext(options: [.useSoftwareRenderer: false])
         guard let final = ctx.createCGImage(ci, from: ci.extent) else { return input }
         return UIImage(cgImage: final)
@@ -100,7 +100,7 @@ enum HDRProcessor {
     private static func autoLevels(_ ci: CIImage) -> CIImage {
         guard let et = CIFilter(name: "CIExposureAdjust") else { return ci }
         et.setValue(ci, forKey: kCIInputImageKey)
-        et.setValue(0.12, forKey: kCIInputEVKey)
+        et.setValue(0.0, forKey: kCIInputEVKey)
         return et.outputImage ?? ci
     }
 
