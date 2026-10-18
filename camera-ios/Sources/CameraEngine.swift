@@ -353,7 +353,7 @@ final class CameraEngine: NSObject, ObservableObject {
         ) ?? .balanced
     }
 
-    func capturePhoto(nightMode: Bool = false, raw: Bool = false) {
+    func capturePhoto(nightMode: Bool = false, raw: Bool = false, allowLivePhoto: Bool = true) {
         sessionQueue.async { [weak self] in
             guard let self = self, let d = self.currentDevice else { return }
             guard self.session.isRunning else { return }
@@ -376,7 +376,7 @@ final class CameraEngine: NSObject, ObservableObject {
                 settings.photoQualityPrioritization = self.clampedQuality(nightMode ? .quality : .balanced)
             }
 
-            if livePhotoCapable, photoOutput.isLivePhotoCaptureEnabled, livePhotoEnabled {
+            if allowLivePhoto, livePhotoCapable, photoOutput.isLivePhotoCaptureEnabled, livePhotoEnabled {
                 let tmpMovie = FileManager.default.temporaryDirectory
                     .appendingPathComponent("LP_\(Int(Date().timeIntervalSince1970 * 1000)).mov")
                 if photoOutput.availableLivePhotoVideoCodecTypes.contains(.hevc) {
@@ -392,7 +392,7 @@ final class CameraEngine: NSObject, ObservableObject {
                     try d.lockForConfiguration()
                     if d.exposureMode != .custom { d.exposureMode = .continuousAutoExposure }
                     let duration = CMTime(value: 1, timescale: 25)
-                    let iso = min(d.activeFormat.maxISO, max(d.iso, d.activeFormat.maxISO * 0.45))
+                    let iso = min(d.activeFormat.maxISO * 0.45, max(d.iso * 1.8, 300))
                     d.setExposureModeCustom(duration: duration, iso: iso, completionHandler: nil)
                     d.unlockForConfiguration()
                     nightExposureActive = true
